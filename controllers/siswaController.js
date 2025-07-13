@@ -1,69 +1,108 @@
-const { v4: uuidv4 } = require('uuid');
-const pool = require('../models/db');
-const multer = require('multer');
-const path = require('path');
-const { error } = require('console');
+const { v4: uuidv4 } = require("uuid");
+const pool = require("../models/db");
+const multer = require("multer");
+const path = require("path");
+const { error } = require("console");
 // Konfigurasi penyimpanan file
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, 'uploads/'); // folder penyimpanan
+    cb(null, "uploads/"); // folder penyimpanan
   },
   filename: (req, file, cb) => {
-    const uniqueName = Date.now() + '-' + file.originalname;
+    const uniqueName = Date.now() + "-" + file.originalname;
     cb(null, uniqueName);
-  }
+  },
 });
 
 // Filter untuk validasi file
 const fileFilter = (req, file, cb) => {
-  const allowedTypes = ['image/jpeg', 'image/png', 'application/pdf', 'image/jpg'];
+  const allowedTypes = [
+    "image/jpeg",
+    "image/png",
+    "application/pdf",
+    "image/jpg",
+  ];
   if (allowedTypes.includes(file.mimetype)) {
     cb(null, true);
   } else {
-    cb(new Error('Jenis file tidak diizinkan'), false);
+    cb(new Error("Jenis file tidak diizinkan"), false);
   }
 };
 
 const upload = multer({ storage, fileFilter });
 exports.addSiswa = async (req, res) => {
-  const {id, name, angkatan, keahlian, link_porto, alamat, deskripsi, posisi, instansi, skill, linkedin, status, email, telepon } = req.body;
+  const {
+    id,
+    name,
+    angkatan,
+    keahlian,
+    link_porto,
+    alamat,
+    deskripsi,
+    posisi,
+    instansi,
+    skill,
+    linkedin,
+    status,
+    email,
+    telepon,
+  } = req.body;
   const foto = req.files.foto ? req.files.foto[0].filename : null;
-  const portofolio_foto = req.files.portofolio_foto ? req.files.portofolio_foto[0].filename : null;
+  const portofolio_foto = req.files.portofolio_foto
+    ? req.files.portofolio_foto[0].filename
+    : null;
   const cv = req.files.cv ? req.files.cv[0].filename : null;
   try {
-    
     await pool.query(
-      'INSERT INTO db_siswa (id, name, angkatan, keahlian, link_porto, cv, foto, alamat, deskripsi, posisi, instansi, skill, linkedin, status, email, telepon) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? , ?)',
-      [id, name, angkatan, keahlian, link_porto, cv, foto, alamat, deskripsi, posisi, instansi, skill, linkedin, status, email, telepon || '']
+      "INSERT INTO db_siswa (id, name, angkatan, keahlian, link_porto, cv, foto, alamat, deskripsi, posisi, instansi, skill, linkedin, status, email, telepon) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? , ?)",
+      [
+        id,
+        name,
+        angkatan,
+        keahlian,
+        link_porto,
+        cv,
+        foto,
+        alamat,
+        deskripsi,
+        posisi,
+        instansi,
+        skill,
+        linkedin,
+        status,
+        email,
+        telepon || "",
+      ]
     );
-    res.json({ message: 'Siswa berhasil ditambahkan', id });
+    res.json({ message: "Siswa berhasil ditambahkan", id });
   } catch (err) {
-    console.error(err)
+    console.error(err);
     res.status(500).json({ error: err.message });
   }
 };
 exports.deleteSiswa = async (req, res) => {
   const { id } = req.params;
   try {
-    const {rows} = await pool.query('DELETE FROM db_siswa WHERE id = ?', [id]);
-    res.json({message: "berhasil dihapus", rows});
-  }
-  catch (err) {
+    const { rows } = await pool.query("DELETE FROM db_siswa WHERE id = ?", [
+      id,
+    ]);
+    res.json({ message: "berhasil dihapus", rows });
+  } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Gagal menghapus data siswa' });
+    res.status(500).json({ error: "Gagal menghapus data siswa" });
   }
-}
+};
 exports.updateSiswa = async (req, res) => {
   const idLama = req.params.id;
-  
   const {
-    id: idBaru,
-    name, angkatan, keahlian, link_porto,
+    id: idBaru, name, angkatan, keahlian, link_porto,
     alamat, deskripsi, posisi, instansi,
     skill, linkedin, status, email, telepon, password, hafalan
   } = req.body;
-  res.json("req.body:", req.body);
-    console.log("req.params.id:", idLama);
+
+  console.log("req.params.id:", idLama);
+  console.log("req.body:", req.body);
+  console.log("req.files:", req.files);
 
   const foto = req.files?.foto ? req.files.foto[0].filename : null;
   const cv = req.files?.cv ? req.files.cv[0].filename : null;
@@ -93,15 +132,19 @@ exports.updateSiswa = async (req, res) => {
 
     res.json({ message: 'Data siswa berhasil diperbarui' });
   } catch (err) {
-    console.error("gagal",err);
+    console.error("gagal", err);
     res.status(500).json({ error: 'Gagal memperbarui data siswa', message: err.message });
   }
 };
 
+
 exports.getSiswaByAngkatan = async (req, res) => {
   const { angkatan } = req.params;
   try {
-    const [rows] = await pool.query('SELECT * FROM db_siswa WHERE angkatan = ?', [angkatan]);
+    const [rows] = await pool.query(
+      "SELECT * FROM db_siswa WHERE angkatan = ?",
+      [angkatan]
+    );
     res.json(rows);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -110,9 +153,17 @@ exports.getSiswaByAngkatan = async (req, res) => {
 exports.getSiswaDetail = async (req, res) => {
   const { id } = req.params;
   try {
-    const [siswa] = await pool.query('SELECT * FROM db_siswa WHERE id = ?', [id]);
-    const [projects] = await pool.query('SELECT * FROM project WHERE db_siswa_id = ?', [id]);
-    const [pengalaman] = await pool.query("SELECT * FROM pengalaman WHERE db_siswa_id = ?", [id]);
+    const [siswa] = await pool.query("SELECT * FROM db_siswa WHERE id = ?", [
+      id,
+    ]);
+    const [projects] = await pool.query(
+      "SELECT * FROM project WHERE db_siswa_id = ?",
+      [id]
+    );
+    const [pengalaman] = await pool.query(
+      "SELECT * FROM pengalaman WHERE db_siswa_id = ?",
+      [id]
+    );
     res.json({ siswa: siswa[0], projects, pengalaman });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -122,7 +173,7 @@ exports.getSiswaByNama = async (req, res) => {
   const { name } = req.query;
   try {
     const [rows] = await pool.query(
-      'SELECT * FROM db_siswa WHERE name LIKE ?',
+      "SELECT * FROM db_siswa WHERE name LIKE ?",
       [`%${name}%`]
     );
     res.json(rows);
@@ -138,35 +189,41 @@ exports.addPengalaman = async (req, res) => {
   const foto = req.files.foto ? req.files.foto[0].filename : null;
   try {
     await pool.query(
-      'INSERT INTO pengalaman (id, name, lokasi, deskripsi, foto, db_siswa_id) VALUES (?, ?, ?, ?, ?, ?)',
-      [id, name, lokasi, deskripsi, foto || '', db_siswa_id]
+      "INSERT INTO pengalaman (id, name, lokasi, deskripsi, foto, db_siswa_id) VALUES (?, ?, ?, ?, ?, ?)",
+      [id, name, lokasi, deskripsi, foto || "", db_siswa_id]
     );
-    res.json({ message: 'Pengalaman berhasil ditambahkan', id });
+    res.json({ message: "Pengalaman berhasil ditambahkan", id });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
-}
+};
 
 exports.getPengalamanAll = async (req, res) => {
   try {
-    const [rows] = await pool.query('SELECT pengalaman.*, db_siswa.name AS siswa_name FROM pengalaman LEFT JOIN db_siswa ON pengalaman.db_siswa_id = db_siswa.id');
+    const [rows] = await pool.query(
+      "SELECT pengalaman.*, db_siswa.name AS siswa_name FROM pengalaman LEFT JOIN db_siswa ON pengalaman.db_siswa_id = db_siswa.id"
+    );
     res.json(rows);
   } catch (err) {
-    console.error('❌ ERROR getPengalamanAll:', err); // 👈 penting
-    res.status(500).json({ error: err.message || 'Terjadi kesalahan pada server.' });
+    console.error("❌ ERROR getPengalamanAll:", err); // 👈 penting
+    res
+      .status(500)
+      .json({ error: err.message || "Terjadi kesalahan pada server." });
   }
-}
+};
 
 exports.getPengalamanBySiswaId = async (req, res) => {
   const { id } = req.params;
   try {
-    const [rows] = await pool.query('SELECT * FROM pengalaman WHERE db_siswa_id = ?', [id]);
+    const [rows] = await pool.query(
+      "SELECT * FROM pengalaman WHERE db_siswa_id = ?",
+      [id]
+    );
     res.json(rows);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
-}
-
+};
 
 exports.updatePengalaman = async (req, res) => {
   const { id } = req.params;
@@ -175,9 +232,11 @@ exports.updatePengalaman = async (req, res) => {
 
   try {
     // Ambil data lama terlebih dahulu (untuk menyimpan file yang tidak diubah)
-    const [rows] = await pool.query('SELECT * FROM pengalaman WHERE id = ?', [id]);
+    const [rows] = await pool.query("SELECT * FROM pengalaman WHERE id = ?", [
+      id,
+    ]);
     if (rows.length === 0) {
-      return res.status(404).json({ error: 'Pengalaman tidak ditemukan' });
+      return res.status(404).json({ error: "Pengalaman tidak ditemukan" });
     }
 
     const oldData = rows[0];
@@ -190,24 +249,25 @@ exports.updatePengalaman = async (req, res) => {
       [name, lokasi, deskripsi, updatedFoto, db_siswa_id, id]
     );
 
-    res.json({ message: 'Pengalaman berhasil diperbarui' });
+    res.json({ message: "Pengalaman berhasil diperbarui" });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Gagal memperbarui pengalaman' });
+    res.status(500).json({ error: "Gagal memperbarui pengalaman" });
   }
-}
-
+};
 
 exports.deletePengalaman = async (req, res) => {
   const { id } = req.params;
   try {
-    const { rows } = await pool.query('DELETE FROM pengalaman WHERE id = ?', [id]);
-    res.json({ message: 'Pengalaman berhasil dihapus', rows });
+    const { rows } = await pool.query("DELETE FROM pengalaman WHERE id = ?", [
+      id,
+    ]);
+    res.json({ message: "Pengalaman berhasil dihapus", rows });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Gagal menghapus pengalaman' });
+    res.status(500).json({ error: "Gagal menghapus pengalaman" });
   }
-}
+};
 //keahlian
 
 exports.addKeahlian = async (req, res) => {
@@ -215,35 +275,40 @@ exports.addKeahlian = async (req, res) => {
   const foto = req.files.foto ? req.files.foto[0].filename : null;
   try {
     await pool.query(
-      'INSERT INTO keahlian (id, name_keahlian, deskripsi, db_siswa_id, foto) VALUES (?, ?, ?, ?, ?)',
-      [id, name_keahlian, deskripsi || '', db_siswa_id, foto]
+      "INSERT INTO keahlian (id, name_keahlian, deskripsi, db_siswa_id, foto) VALUES (?, ?, ?, ?, ?)",
+      [id, name_keahlian, deskripsi || "", db_siswa_id, foto]
     );
-    res.json({ message: 'keahlian berhasil ditambahkan', id });
+    res.json({ message: "keahlian berhasil ditambahkan", id });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
-}
-
+};
 
 exports.deleteKeahlian = async (req, res) => {
   const { id } = req.params;
   try {
-    const { rows } = await pool.query('DELETE FROM keahlian WHERE id = ?', [id]);
-    res.json({ message: 'Keahlian berhasil dihapus' });
+    const { rows } = await pool.query("DELETE FROM keahlian WHERE id = ?", [
+      id,
+    ]);
+    res.json({ message: "Keahlian berhasil dihapus" });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Gagal menghapus keahlian' });
+    res.status(500).json({ error: "Gagal menghapus keahlian" });
   }
-}
+};
 exports.getAllKeahlian = async (req, res) => {
   try {
-    console.log('🔍 Querying keahlian...');
-    const [ rows  ]= await pool.query('SELECT k.id, k.name_keahlian, k.deskripsi, s.name AS nama_siswa FROM keahlian k JOIN db_siswa s ON k.db_siswa_id = s.id');
-    console.log('✅ Rows:', rows);
+    console.log("🔍 Querying keahlian...");
+    const [rows] = await pool.query(
+      "SELECT k.id, k.name_keahlian, k.deskripsi, s.name AS nama_siswa FROM keahlian k JOIN db_siswa s ON k.db_siswa_id = s.id"
+    );
+    console.log("✅ Rows:", rows);
     res.json(rows);
   } catch (err) {
-    console.error('❌ ERROR getKeahlian:', err);
-    res.status(500).json({ error: err.message || 'Terjadi kesalahan pada server.' });
+    console.error("❌ ERROR getKeahlian:", err);
+    res
+      .status(500)
+      .json({ error: err.message || "Terjadi kesalahan pada server." });
   }
 };
 
@@ -251,33 +316,37 @@ exports.updateKeahlian = async (req, res) => {
   const { id } = req.params;
   const { name_keahlian, deskripsi, db_siswa_id } = req.body;
   const foto = req.files.foto ? req.files.foto[0].filename : null;
-  
+
   try {
     // Ambil data lama terlebih dahulu (untuk menyimpan file yang tidak diubah)
-    const [rows] = await pool.query('SELECT * FROM keahlian WHERE id = ?', [id]);
+    const [rows] = await pool.query("SELECT * FROM keahlian WHERE id = ?", [
+      id,
+    ]);
     if (rows.length === 0) {
-      return res.status(404).json({ error: 'Keahlian tidak ditemukan' });
+      return res.status(404).json({ error: "Keahlian tidak ditemukan" });
     }
-    
+
     const oldData = rows[0];
-    
+
     // Gunakan file baru jika ada, kalau tidak pakai file lama
     const updatedFoto = foto || oldData.foto;
-    
+
     await pool.query(
       `UPDATE keahlian SET name_keahlian = ?, deskripsi = ?, db_siswa_id = ?, foto = ? WHERE id = ?`,
       [name_keahlian, deskripsi, db_siswa_id, updatedFoto, id]
     );
-    
-    res.json({ message: 'Keahlian berhasil diperbarui' });
+
+    res.json({ message: "Keahlian berhasil diperbarui" });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Gagal memperbarui keahlian' });
+    res.status(500).json({ error: "Gagal memperbarui keahlian" });
   }
-}
+};
 exports.getAvailableAngkatan = async (req, res) => {
   try {
-    const [rows] = await pool.query("SELECT DISTINCT angkatan FROM siswa ORDER BY angkatan ASC");
+    const [rows] = await pool.query(
+      "SELECT DISTINCT angkatan FROM siswa ORDER BY angkatan ASC"
+    );
     const angkatanList = rows.map((r) => r.angkatan);
     res.json(angkatanList);
   } catch (err) {
@@ -289,7 +358,7 @@ exports.getKeahlianBySiswaId = async (req, res) => {
   const { siswaId } = req.params;
   try {
     const [result] = await pool.query(
-      'SELECT * FROM keahlian WHERE db_siswa_id = ?',
+      "SELECT * FROM keahlian WHERE db_siswa_id = ?",
       [siswaId]
     );
     res.json(result); // array of keahlian
@@ -298,16 +367,16 @@ exports.getKeahlianBySiswaId = async (req, res) => {
   }
 };
 exports.addProjectWithUpload = async (req, res) => {
-  const {id, name_project, db_siswa_id, link_web, deskripsi, tools } = req.body; // 🟢 tambahkan link_porto
+  const { id, name_project, db_siswa_id, link_web, deskripsi, tools } =
+    req.body; // 🟢 tambahkan link_porto
   const foto = req.files.foto ? req.files.foto[0].filename : null;
 
   try {
-    
     await pool.query(
-      'INSERT INTO project (id, name_project, db_siswa_id, foto, link_web, deskripsi, tools) VALUES (?, ?, ?, ?, ?, ?, ?)',
-      [id, name_project, db_siswa_id, foto, link_web, deskripsi || '', tools]
+      "INSERT INTO project (id, name_project, db_siswa_id, foto, link_web, deskripsi, tools) VALUES (?, ?, ?, ?, ?, ?, ?)",
+      [id, name_project, db_siswa_id, foto, link_web, deskripsi || "", tools]
     );
-    res.json({ message: 'Project dengan upload berhasil ditambahkan', id });
+    res.json({ message: "Project dengan upload berhasil ditambahkan", id });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -317,11 +386,15 @@ exports.addProjectWithUpload = async (req, res) => {
 
 exports.getProjectAll = async (req, res) => {
   try {
-    const [rows] = await pool.query('SELECT p.id, p.name_project, p.foto, p.link_web, p.deskripsi, s.name AS nama_siswa FROM project p JOIN db_siswa s ON p.db_siswa_id = s.id');
+    const [rows] = await pool.query(
+      "SELECT p.id, p.name_project, p.foto, p.link_web, p.deskripsi, s.name AS nama_siswa FROM project p JOIN db_siswa s ON p.db_siswa_id = s.id"
+    );
     res.json(rows);
   } catch (err) {
-    console.error('❌ ERROR getProjectAll:', err); // 👈 penting
-    res.status(500).json({ error: err.message || 'Terjadi kesalahan pada server.' });
+    console.error("❌ ERROR getProjectAll:", err); // 👈 penting
+    res
+      .status(500)
+      .json({ error: err.message || "Terjadi kesalahan pada server." });
   }
 };
 
@@ -332,9 +405,9 @@ exports.updateProject = async (req, res) => {
 
   try {
     // Ambil data lama terlebih dahulu (untuk menyimpan file yang tidak diubah)
-    const [rows] = await pool.query('SELECT * FROM project WHERE id = ?', [id]);
+    const [rows] = await pool.query("SELECT * FROM project WHERE id = ?", [id]);
     if (rows.length === 0) {
-      return res.status(404).json({ error: 'Project tidak ditemukan' });
+      return res.status(404).json({ error: "Project tidak ditemukan" });
     }
 
     const oldData = rows[0];
@@ -347,27 +420,27 @@ exports.updateProject = async (req, res) => {
       [name_project, db_siswa_id, updatedFoto, link_web, deskripsi, tools, id]
     );
 
-    res.json({ message: 'Project berhasil diperbarui' });
+    res.json({ message: "Project berhasil diperbarui" });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Gagal memperbarui project' });
+    res.status(500).json({ error: "Gagal memperbarui project" });
   }
-}
+};
 
 exports.deleteProject = async (req, res) => {
   const { id } = req.params;
   try {
-    const { rows } = await pool.query('DELETE FROM project WHERE id = ?', [id]);
-    res.json({ message: 'Project berhasil dihapus', rows });
+    const { rows } = await pool.query("DELETE FROM project WHERE id = ?", [id]);
+    res.json({ message: "Project berhasil dihapus", rows });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Gagal menghapus project' });
+    res.status(500).json({ error: "Gagal menghapus project" });
   }
-}
+};
 
 exports.getAll = async (req, res) => {
   try {
-    const [siswa] = await pool.query('SELECT * FROM db_siswa');
+    const [siswa] = await pool.query("SELECT * FROM db_siswa");
     res.json(siswa);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -391,13 +464,12 @@ exports.addProjectPending = async (req, res) => {
   }
 };
 
-
 exports.getProjectPending = async (req, res) => {
   try {
-    const [arrow] = await pool.query('SELECT * FROM project_pending');
+    const [arrow] = await pool.query("SELECT * FROM project_pending");
     res.json(arrow);
   } catch (err) {
-    res.status(500).json({ error : err.message});
+    res.status(500).json({ error: err.message });
   }
 };
 
@@ -443,13 +515,16 @@ exports.approveProjectPending = async (req, res) => {
 exports.deleteProjectPending = async (req, res) => {
   const { id } = req.params;
   try {
-    const { rows } = await pool.query('DELETE FROM project_pending WHERE id = ?', [id]);
-    res.json({ message: 'Project pending berhasil dihapus', rows });
+    const { rows } = await pool.query(
+      "DELETE FROM project_pending WHERE id = ?",
+      [id]
+    );
+    res.json({ message: "Project pending berhasil dihapus", rows });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Gagal menghapus project pending' });
+    res.status(500).json({ error: "Gagal menghapus project pending" });
   }
-}
+};
 
 exports.updateProjectPending = async (req, res) => {
   const { id } = req.params;
@@ -458,9 +533,12 @@ exports.updateProjectPending = async (req, res) => {
 
   try {
     // Ambil data lama terlebih dahulu (untuk menyimpan file yang tidak diubah)
-    const [rows] = await pool.query('SELECT * FROM project_pending WHERE id = ?', [id]);
+    const [rows] = await pool.query(
+      "SELECT * FROM project_pending WHERE id = ?",
+      [id]
+    );
     if (rows.length === 0) {
-      return res.status(404).json({ error: 'Project pending tidak ditemukan' });
+      return res.status(404).json({ error: "Project pending tidak ditemukan" });
     }
 
     const oldData = rows[0];
@@ -473,12 +551,12 @@ exports.updateProjectPending = async (req, res) => {
       [name_project, db_siswa_id, updatedFoto, link_web, deskripsi, tools, id]
     );
 
-    res.json({ message: 'Project pending berhasil diperbarui' });
+    res.json({ message: "Project pending berhasil diperbarui" });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Gagal memperbarui project pending' });
+    res.status(500).json({ error: "Gagal memperbarui project pending" });
   }
-}
+};
 
 // POST /api/siswa_pending
 exports.addSiswaPending = async (req, res) => {
@@ -492,7 +570,7 @@ exports.addSiswaPending = async (req, res) => {
     posisi,
     instansi,
     skill,
-    deskripsi
+    deskripsi,
   } = req.body;
 
   const foto = req.file ? req.file.filename : null;
@@ -500,38 +578,44 @@ exports.addSiswaPending = async (req, res) => {
   try {
     if (db_siswa_id) {
       // Mode UPDATE siswa
-      await pool.query(`
+      await pool.query(
+        `
         INSERT INTO siswa_pending (db_siswa_id, name, angkatan, keahlian, alamat, posisi, instansi, skill, deskripsi, foto, status)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)
-      `, [
-        db_siswa_id,
-        name,
-        angkatan,
-        keahlian,
-        alamat,
-        posisi,
-        instansi,
-        skill,
-        deskripsi,
-        foto
-      ]);
+      `,
+        [
+          db_siswa_id,
+          name,
+          angkatan,
+          keahlian,
+          alamat,
+          posisi,
+          instansi,
+          skill,
+          deskripsi,
+          foto,
+        ]
+      );
     } else {
       // Mode TAMBAH siswa baru
-      await pool.query(`
+      await pool.query(
+        `
         INSERT INTO siswa_pending (id, name, angkatan, keahlian, alamat, posisi, instansi, skill, deskripsi, foto, status)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)
-      `, [
-        id,
-        name,
-        angkatan,
-        keahlian,
-        alamat,
-        posisi,
-        instansi,
-        skill,
-        deskripsi,
-        foto
-      ]);
+      `,
+        [
+          id,
+          name,
+          angkatan,
+          keahlian,
+          alamat,
+          posisi,
+          instansi,
+          skill,
+          deskripsi,
+          foto,
+        ]
+      );
     }
 
     res.status(200).json({ message: "Berhasil mengajukan update siswa" });
@@ -541,15 +625,15 @@ exports.addSiswaPending = async (req, res) => {
   }
 };
 
-
-
-
 // PUT /api/approve_siswa/:id
 exports.approveSiswaPending = async (req, res) => {
   const { id } = req.params;
 
   try {
-    const [rows] = await pool.query("SELECT * FROM siswa_pending WHERE id = ?", [id]);
+    const [rows] = await pool.query(
+      "SELECT * FROM siswa_pending WHERE id = ?",
+      [id]
+    );
     const data = rows[0];
     if (!data) return res.status(404).json({ error: "Data tidak ditemukan" });
 
@@ -558,7 +642,18 @@ exports.approveSiswaPending = async (req, res) => {
       await pool.query(
         `INSERT INTO db_siswa (id, name, angkatan, keahlian, alamat, posisi, instansi, skill, deskripsi, foto)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [data.id, data.name, data.angkatan, data.keahlian, data.alamat, data.posisi, data.instansi, data.skill, data.deskripsi, data.foto]
+        [
+          data.id,
+          data.name,
+          data.angkatan,
+          data.keahlian,
+          data.alamat,
+          data.posisi,
+          data.instansi,
+          data.skill,
+          data.deskripsi,
+          data.foto,
+        ]
       );
     } else {
       // UPDATE siswa lama
@@ -566,7 +661,18 @@ exports.approveSiswaPending = async (req, res) => {
         `UPDATE db_siswa SET
           name = ?, angkatan = ?, keahlian = ?, alamat = ?, posisi = ?, instansi = ?, skill = ?, deskripsi = ?, foto = ?
          WHERE id = ?`,
-        [data.name, data.angkatan, data.keahlian, data.alamat, data.posisi, data.instansi, data.skill, data.deskripsi, data.foto, data.db_siswa_id]
+        [
+          data.name,
+          data.angkatan,
+          data.keahlian,
+          data.alamat,
+          data.posisi,
+          data.instansi,
+          data.skill,
+          data.deskripsi,
+          data.foto,
+          data.db_siswa_id,
+        ]
       );
     }
 
@@ -580,42 +686,46 @@ exports.approveSiswaPending = async (req, res) => {
   }
 };
 
-
 exports.deleteSiswaPending = async (req, res) => {
   const { id } = req.params;
   try {
-    const { rows } = await pool.query('DELETE FROM siswa_pending WHERE id = ?', [id]);
-    res.json({ message: 'Siswa pending berhasil dihapus', rows });
+    const { rows } = await pool.query(
+      "DELETE FROM siswa_pending WHERE id = ?",
+      [id]
+    );
+    res.json({ message: "Siswa pending berhasil dihapus", rows });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Gagal menghapus siswa pending' });
+    res.status(500).json({ error: "Gagal menghapus siswa pending" });
   }
-}
+};
 
 exports.getSiswaPending = async (req, res) => {
   try {
     const [isi] = await pool.query("SELECT * FROM siswa_pending");
     res.json(isi);
   } catch (err) {
-    res.status(500).json({error: err.message})
+    res.status(500).json({ error: err.message });
   }
-}
+};
 
 exports.addPengalamanPending = async (req, res) => {
   const { db_siswa_id, name, lokasi, deskripsi } = req.body;
 
-
   try {
-    await pool.query(`
+    await pool.query(
+      `
       INSERT INTO pengalaman_pending (db_siswa_id, name, lokasi, deskripsi, status)
       VALUES (?, ?, ?, ?, 0)
-    `, [db_siswa_id, name, lokasi, deskripsi]);
+    `,
+      [db_siswa_id, name, lokasi, deskripsi]
+    );
     res.status(200).json({ message: "Berhasil mengajukan pengalaman baru" });
   } catch (err) {
     console.error("Insert Error:", err);
     res.status(500).json({ error: err.message });
   }
-}
+};
 
 exports.getPengalamanPending = async (req, res) => {
   try {
@@ -625,14 +735,17 @@ exports.getPengalamanPending = async (req, res) => {
     console.error("Error fetching pengalaman_pending:", err);
     res.status(500).json({ error: err.message });
   }
-}
+};
 
 // PUT /api/approve_pengalaman/:id
 exports.approvePengalamanPending = async (req, res) => {
   const { id } = req.params;
 
   try {
-    const [rows] = await pool.query("SELECT * FROM pengalaman_pending WHERE id = ?", [id]);
+    const [rows] = await pool.query(
+      "SELECT * FROM pengalaman_pending WHERE id = ?",
+      [id]
+    );
     const data = rows[0];
     if (!data) return res.status(404).json({ error: "Data tidak ditemukan" });
 
@@ -654,13 +767,16 @@ exports.approvePengalamanPending = async (req, res) => {
 exports.deletePengalamanPending = async (req, res) => {
   const { id } = req.params;
   try {
-    const { rows } = await pool.query('DELETE FROM pengalaman_pending WHERE id = ?', [id]);
-    res.json({ message: 'Pengalaman pending berhasil dihapus', rows });
+    const { rows } = await pool.query(
+      "DELETE FROM pengalaman_pending WHERE id = ?",
+      [id]
+    );
+    res.json({ message: "Pengalaman pending berhasil dihapus", rows });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Gagal menghapus pengalaman pending' });
+    res.status(500).json({ error: "Gagal menghapus pengalaman pending" });
   }
-}
+};
 
 // API: PUT /api/update_pengalaman_pending/:id
 exports.updatePengalamanPending = async (req, res) => {
@@ -729,7 +845,9 @@ exports.adminLogin = async (req, res) => {
 
   try {
     // 1. Cek apakah admin
-    const [adminRows] = await pool.query("SELECT * FROM admin WHERE nis = ?", [nis]);
+    const [adminRows] = await pool.query("SELECT * FROM admin WHERE nis = ?", [
+      nis,
+    ]);
 
     if (adminRows.length > 0) {
       const admin = adminRows[0];
@@ -749,7 +867,10 @@ exports.adminLogin = async (req, res) => {
     }
 
     // 2. Kalau bukan admin, cek apakah siswa berdasarkan ID (nis == id)
-    const [siswaRows] = await pool.query("SELECT * FROM db_siswa WHERE id = ?", [nis]);
+    const [siswaRows] = await pool.query(
+      "SELECT * FROM db_siswa WHERE id = ?",
+      [nis]
+    );
 
     if (siswaRows.length === 0) {
       return res.status(404).json({
@@ -783,10 +904,11 @@ exports.adminLogin = async (req, res) => {
   }
 };
 
-
 exports.getPassword = async (req, res) => {
   try {
-    const [rows] = await pool.query("SELECT password FROM password_edit LIMIT 1");
+    const [rows] = await pool.query(
+      "SELECT password FROM password_edit LIMIT 1"
+    );
     if (rows.length > 0) {
       res.json({ password: rows[0].password });
     } else {
@@ -799,15 +921,17 @@ exports.getPassword = async (req, res) => {
 
 exports.verifyPassword = async (req, res) => {
   const { password } = req.body;
-  
+
   try {
-    const [rows] = await pool.query("SELECT password FROM password_edit LIMIT 1");
+    const [rows] = await pool.query(
+      "SELECT password FROM password_edit LIMIT 1"
+    );
     if (rows.length === 0) {
       return res.status(404).json({ error: "Tidak ada password tersimpan" });
     }
-    
+
     const correctPassword = rows[0].password;
-    
+
     if (password === correctPassword) {
       res.json({ success: true });
     } else {
@@ -816,27 +940,26 @@ exports.verifyPassword = async (req, res) => {
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
-}
+};
 
 const penympanan = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, 'uploads/'); // folder penyimpanan
+    cb(null, "uploads/"); // folder penyimpanan
   },
   filename: (req, file, cb) => {
-    const uniqueName = Date.now() + '-' + file.originalname;
+    const uniqueName = Date.now() + "-" + file.originalname;
     cb(null, uniqueName);
-  }
+  },
 });
 
 // Filter untuk validasi file
 const filterFile = (req, file, cb) => {
-  const allowedTypes = ['image/jpeg', 'image/png', 'application/pdf'];
+  const allowedTypes = ["image/jpeg", "image/png", "application/pdf"];
   if (allowedTypes.includes(file.mimetype)) {
     cb(null, true);
   } else {
-    cb(new Error('Jenis file tidak diizinkan'), false);
+    cb(new Error("Jenis file tidak diizinkan"), false);
   }
 };
 
 const post = multer({ penympanan, filterFile });
-
