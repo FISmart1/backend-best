@@ -60,7 +60,7 @@ exports.updateSiswa = async (req, res) => {
     id: idBaru,
     name, angkatan, keahlian, link_porto,
     alamat, deskripsi, posisi, instansi,
-    skill, linkedin, status, email, telepon, password
+    skill, linkedin, status, email, telepon, password, hafalan
   } = req.body;
   res.json("req.body:", req.body);
     console.log("req.params.id:", idLama);
@@ -81,13 +81,13 @@ exports.updateSiswa = async (req, res) => {
     await pool.query(
       `UPDATE db_siswa SET id = ?, name = ?, angkatan = ?, keahlian = ?, link_porto = ?, 
        cv = ?, foto = ?, alamat = ?, deskripsi = ?, posisi =?, instansi = ?, skill = ?, 
-       linkedin = ?, status = ?, email = ?, telepon = ?, password = ?
+       linkedin = ?, status = ?, email = ?, telepon = ?, password = ?, hafalan = ?
        WHERE id = ?`,
       [
         idBaru, name, angkatan, keahlian, link_porto,
         updatedCV, updatedFoto, alamat, deskripsi, posisi,
         instansi, skill, linkedin, status, email, telepon,
-        password || '', idLama
+        password, hafalan || '', idLama
       ]
     );
 
