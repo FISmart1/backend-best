@@ -55,8 +55,9 @@ exports.deleteSiswa = async (req, res) => {
 }
 exports.updateSiswa = async (req, res) => {
   const idLama = req.params.id;
-  const idBaru = req.body.id;
+  
   const {
+    id: idBaru,
     name, angkatan, keahlian, link_porto,
     alamat, deskripsi, posisi, instansi,
     skill, linkedin, status, email, telepon, password
@@ -90,7 +91,7 @@ exports.updateSiswa = async (req, res) => {
 
     res.json({ message: 'Data siswa berhasil diperbarui' });
   } catch (err) {
-    console.error(err);
+    console.error("gagal",err);
     res.status(500).json({ error: 'Gagal memperbarui data siswa' });
   }
 };
