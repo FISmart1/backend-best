@@ -54,8 +54,8 @@ exports.deleteSiswa = async (req, res) => {
   }
 }
 exports.updateSiswa = async (req, res) => {
-  const { idBaru } = req.params;
-  const idLama = req.params.id_lama;
+  const { idBaru } = req.body.idBaru;
+  const idLama = req.params.id;
   const { name, angkatan, keahlian, link_porto, alamat, deskripsi, posisi, instansi, skill, linkedin, status, email, telepon, password } = req.body;
 
   // Cek file jika ada perubahan
@@ -64,7 +64,7 @@ exports.updateSiswa = async (req, res) => {
 
   try {
     // Ambil data lama terlebih dahulu (untuk menyimpan file yang tidak diubah)
-    const [rows] = await pool.query('SELECT * FROM db_siswa WHERE id = ?', [id]);
+    const [rows] = await pool.query('SELECT * FROM db_siswa WHERE id = ?', [idLama]);
     if (rows.length === 0) {
       return res.status(404).json({ error: 'Siswa tidak ditemukan' });
     }
