@@ -95,9 +95,22 @@ exports.deleteSiswa = async (req, res) => {
 exports.updateSiswa = async (req, res) => {
   const idLama = req.params.id;
   const {
-    id: idBaru, name, angkatan, keahlian, link_porto,
-    alamat, deskripsi, posisi, instansi,
-    skill, linkedin, status, email, telepon, password, hafalan
+    id: idBaru, // bisa undefined jika tidak ingin ubah NIS
+    name,
+    angkatan,
+    keahlian,
+    link_porto,
+    alamat,
+    deskripsi,
+    posisi,
+    instansi,
+    skill,
+    linkedin,
+    status,
+    email,
+    telepon,
+    password,
+    hafalan,
   } = req.body;
 
   console.log("req.params.id:", idLama);
@@ -108,35 +121,91 @@ exports.updateSiswa = async (req, res) => {
   const cv = req.files?.cv ? req.files.cv[0].filename : null;
 
   try {
-    const [rows] = await pool.query('SELECT * FROM db_siswa WHERE id = ?', [idLama]);
+    const [rows] = await pool.query("SELECT * FROM db_siswa WHERE id = ?", [
+      idLama,
+    ]);
     if (rows.length === 0) {
-      return res.status(404).json({ error: 'Siswa tidak ditemukan' });
+      return res.status(404).json({ error: "Siswa tidak ditemukan" });
     }
 
     const oldData = rows[0];
     const updatedFoto = foto || oldData.foto;
     const updatedCV = cv || oldData.cv;
 
-    await pool.query(
-      `UPDATE db_siswa SET id = ?, name = ?, angkatan = ?, keahlian = ?, link_porto = ?, 
-       cv = ?, foto = ?, alamat = ?, deskripsi = ?, posisi =?, instansi = ?, skill = ?, 
-       linkedin = ?, status = ?, email = ?, telepon = ?, password = ?, hafalan = ?
-       WHERE id = ?`,
-      [
-        idBaru, name, angkatan, keahlian, link_porto,
-        updatedCV, updatedFoto, alamat, deskripsi, posisi,
-        instansi, skill, linkedin, status, email, telepon,
-        password, hafalan || '', idLama
-      ]
-    );
+    let query = `
+      UPDATE db_siswa SET 
+        name = ?, angkatan = ?, keahlian = ?, link_porto = ?, 
+        cv = ?, foto = ?, alamat = ?, deskripsi = ?, posisi = ?, 
+        instansi = ?, skill = ?, linkedin = ?, status = ?, 
+        email = ?, telepon = ?, password = ?, hafalan = ?
+      WHERE id = ?
+    `;
 
-    res.json({ message: 'Data siswa berhasil diperbarui' });
+    let values = [
+      name,
+      angkatan,
+      keahlian,
+      link_porto,
+      updatedCV,
+      updatedFoto,
+      alamat,
+      deskripsi,
+      posisi,
+      instansi,
+      skill,
+      linkedin,
+      status,
+      email,
+      telepon,
+      password,
+      hafalan || "",
+      idLama,
+    ];
+
+    // Jika ingin ubah id
+    if (idBaru && idBaru !== idLama) {
+      query = `
+        UPDATE db_siswa SET 
+          id = ?, name = ?, angkatan = ?, keahlian = ?, link_porto = ?, 
+          cv = ?, foto = ?, alamat = ?, deskripsi = ?, posisi = ?, 
+          instansi = ?, skill = ?, linkedin = ?, status = ?, 
+          email = ?, telepon = ?, password = ?, hafalan = ?
+        WHERE id = ?
+      `;
+      values = [
+        idBaru,
+        name,
+        angkatan,
+        keahlian,
+        link_porto,
+        updatedCV,
+        updatedFoto,
+        alamat,
+        deskripsi,
+        posisi,
+        instansi,
+        skill,
+        linkedin,
+        status,
+        email,
+        telepon,
+        password,
+        hafalan || "",
+        idLama,
+      ];
+    }
+
+    await pool.query(query, values);
+
+    res.json({ message: "Data siswa berhasil diperbarui" });
   } catch (err) {
     console.error("gagal", err);
-    res.status(500).json({ error: 'Gagal memperbarui data siswa', message: err.message });
+    res.status(500).json({
+      error: "Gagal memperbarui data siswa",
+      message: err.message,
+    });
   }
 };
-
 
 exports.getSiswaByAngkatan = async (req, res) => {
   const { angkatan } = req.params;
