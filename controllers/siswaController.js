@@ -62,7 +62,7 @@ exports.updateSiswa = async (req, res) => {
     alamat, deskripsi, posisi, instansi,
     skill, linkedin, status, email, telepon, password
   } = req.body;
-  console.log("req.body:", req.body);
+  res.json("req.body:", req.body);
     console.log("req.params.id:", idLama);
 
   const foto = req.files?.foto ? req.files.foto[0].filename : null;

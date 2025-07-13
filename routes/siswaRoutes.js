@@ -13,7 +13,7 @@ router.post('/siswa', upload.fields([
 router.put('/siswa/update/:id', upload.fields([
   { name: 'foto', maxCount: 1 },
   { name: 'cv', maxCount: 1 },
-  { name: 'portofolio_foto', maxCount: 1 }
+
 ]), siswaController.updateSiswa);
 
 router.get('/siswa/angkatan/:angkatan', siswaController.getSiswaByAngkatan);
