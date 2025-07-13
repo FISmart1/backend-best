@@ -94,7 +94,7 @@ exports.updateSiswa = async (req, res) => {
     res.json({ message: 'Data siswa berhasil diperbarui' });
   } catch (err) {
     console.error("gagal",err);
-    res.status(500).json({ error: 'Gagal memperbarui data siswa' });
+    res.status(500).json({ error: 'Gagal memperbarui data siswa', message: err.message });
   }
 };
 
