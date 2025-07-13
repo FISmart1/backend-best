@@ -54,7 +54,8 @@ exports.deleteSiswa = async (req, res) => {
   }
 }
 exports.updateSiswa = async (req, res) => {
-  const { id } = req.params;
+  const { idBaru } = req.params;
+  const idLama = req.params.id_lama;
   const { name, angkatan, keahlian, link_porto, alamat, deskripsi, posisi, instansi, skill, linkedin, status, email, telepon, password } = req.body;
 
   // Cek file jika ada perubahan
@@ -79,7 +80,7 @@ exports.updateSiswa = async (req, res) => {
       `UPDATE db_siswa SET id = ?,  name = ?, angkatan = ?, keahlian = ?, link_porto = ?, cv = ?, foto = ?, alamat = ?, deskripsi = ?, posisi =?, instansi = ?, skill = ?, linkedin = ?, status = ?, email = ?, telepon = ?, password = ?
        WHERE id = ?`,
       [
-        id,
+        idBaru,
         name,
         angkatan,
         keahlian,
@@ -96,7 +97,7 @@ exports.updateSiswa = async (req, res) => {
         email,
         telepon,
         password || '',
-        id,
+        idLama,
       ]
     );
 
