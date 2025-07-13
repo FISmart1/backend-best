@@ -686,6 +686,43 @@ exports.updatePengalamanPending = async (req, res) => {
   }
 };
 
+// GET semua testimoni
+exports.getAllTestimoni = async (req, res) => {
+  try {
+    const [rows] = await pool.query(
+      "SELECT * FROM testimoni ORDER BY created_at DESC"
+    );
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// POST testimoni baru
+exports.createTestimoni = async (req, res) => {
+  const { nama, instansi, pesan } = req.body;
+
+  if (!nama || !instansi || !pesan) {
+    return res.status(400).json({ error: "Semua field wajib diisi." });
+  }
+
+  try {
+    const [result] = await pool.query(
+      "INSERT INTO testimoni (nama, instansi, pesan) VALUES (?, ?, ?)",
+      [nama, instansi, pesan]
+    );
+
+    res.status(201).json({
+      id: result.insertId,
+      nama,
+      instansi,
+      pesan,
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
 //admin
 
 exports.adminLogin = async (req, res) => {
