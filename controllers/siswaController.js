@@ -54,50 +54,37 @@ exports.deleteSiswa = async (req, res) => {
   }
 }
 exports.updateSiswa = async (req, res) => {
-  const { idBaru } = req.body.idBaru;
   const idLama = req.params.id;
-  const { name, angkatan, keahlian, link_porto, alamat, deskripsi, posisi, instansi, skill, linkedin, status, email, telepon, password } = req.body;
+  const idBaru = req.body.id;
+  const {
+    name, angkatan, keahlian, link_porto,
+    alamat, deskripsi, posisi, instansi,
+    skill, linkedin, status, email, telepon, password
+  } = req.body;
 
-  // Cek file jika ada perubahan
   const foto = req.files?.foto ? req.files.foto[0].filename : null;
   const cv = req.files?.cv ? req.files.cv[0].filename : null;
 
   try {
-    // Ambil data lama terlebih dahulu (untuk menyimpan file yang tidak diubah)
     const [rows] = await pool.query('SELECT * FROM db_siswa WHERE id = ?', [idLama]);
     if (rows.length === 0) {
       return res.status(404).json({ error: 'Siswa tidak ditemukan' });
     }
 
     const oldData = rows[0];
-
-    // Gunakan file baru jika ada, kalau tidak pakai file lama
     const updatedFoto = foto || oldData.foto;
     const updatedCV = cv || oldData.cv;
 
-
     await pool.query(
-      `UPDATE db_siswa SET id = ?,  name = ?, angkatan = ?, keahlian = ?, link_porto = ?, cv = ?, foto = ?, alamat = ?, deskripsi = ?, posisi =?, instansi = ?, skill = ?, linkedin = ?, status = ?, email = ?, telepon = ?, password = ?
+      `UPDATE db_siswa SET id = ?, name = ?, angkatan = ?, keahlian = ?, link_porto = ?, 
+       cv = ?, foto = ?, alamat = ?, deskripsi = ?, posisi =?, instansi = ?, skill = ?, 
+       linkedin = ?, status = ?, email = ?, telepon = ?, password = ?
        WHERE id = ?`,
       [
-        idBaru,
-        name,
-        angkatan,
-        keahlian,
-        link_porto,
-        updatedCV,
-        updatedFoto,
-        alamat,
-        deskripsi,
-        posisi,
-        instansi,
-        skill,
-        linkedin,
-        status,
-        email,
-        telepon,
-        password || '',
-        idLama,
+        idBaru, name, angkatan, keahlian, link_porto,
+        updatedCV, updatedFoto, alamat, deskripsi, posisi,
+        instansi, skill, linkedin, status, email, telepon,
+        password || '', idLama
       ]
     );
 
@@ -107,6 +94,7 @@ exports.updateSiswa = async (req, res) => {
     res.status(500).json({ error: 'Gagal memperbarui data siswa' });
   }
 };
+
 exports.getSiswaByAngkatan = async (req, res) => {
   const { angkatan } = req.params;
   try {
