@@ -255,17 +255,20 @@ exports.getSiswaByNama = async (req, res) => {
 
 exports.addPengalaman = async (req, res) => {
   const { id, name, lokasi, deskripsi, db_siswa_id } = req.body;
-  const foto = req.files.foto ? req.files.foto[0].filename : null;
+  const foto = req.files?.foto?.[0]?.filename || "";
+
   try {
     await pool.query(
       "INSERT INTO pengalaman (id, name, lokasi, deskripsi, foto, db_siswa_id) VALUES (?, ?, ?, ?, ?, ?)",
-      [id, name, lokasi, deskripsi, foto || "", db_siswa_id]
+      [id, name, lokasi, deskripsi, foto, db_siswa_id]
     );
     res.json({ message: "Pengalaman berhasil ditambahkan", id });
   } catch (err) {
+    console.error("Gagal tambah pengalaman:", err);
     res.status(500).json({ error: err.message });
   }
 };
+
 
 exports.getPengalamanAll = async (req, res) => {
   try {
